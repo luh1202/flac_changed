@@ -1,0 +1,7 @@
+subroutine fl_try
+use arrays
+include 'precision.inc' ! vs BI(Behn and Ito 2008): the same                                                                                                    
+include 'params.inc'   ! vs BI: not the same                                                                                                                    
+include 'arrays.inc'
+
+ninj=iinj2-iinj1+1

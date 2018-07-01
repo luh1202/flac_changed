@@ -15,11 +15,6 @@ if (itherm .eq. 3) goto 222
 call fl_therm
 222 continue
 
-
-!call fl_injectheat
-call fl_try !Hao debug
-
-
 if (itherm .eq.2) goto 500  ! Thermal calculation only
 
 ! Calculation of strain rates from velocity
@@ -44,7 +39,7 @@ call fl_move
 
 ! calculate diking thermal effect
 !if (ny_inject.gt.2) then
-!call fl_injectheat
+call fl_injectheat
 !print*,"call injectheat"
 !endif
 
