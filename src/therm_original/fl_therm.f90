@@ -69,6 +69,7 @@ do i = 1,nx-1
     do j = 1,nz-1
 
         iph = iphase(j,i)
+
         ! Calculating effective material properties
         cp_eff = Eff_cp( j,i )
         cond_eff = Eff_conduct( j,i )
@@ -258,7 +259,7 @@ do i = 1,nx
 end do
 !$OMP end do
 
-!temp(1:nz,1:nx) = temp00(1:nz,1:nx)
+temp(1:nz,1:nx) = temp00(1:nz,1:nx)
 
 ! Boundary conditions: dt/dx =0 on left and right  
 !$OMP do
