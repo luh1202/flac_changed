@@ -7,6 +7,7 @@ include 'arrays.inc'
 
 ! reset the markers within elements in the rectangular region
 
+
 do kk = 1 , nmarkers
     if (mark(kk)%dead.eq.0) cycle
     n = mark(kk)%ntriag
@@ -36,7 +37,7 @@ include 'precision.inc'
 include 'params.inc'
 include 'arrays.inc'
 include 'phases.inc'
-integer ichanged(100*mnx), jchanged(100*mnx)
+!integer ichanged(100*mnx), jchanged(100*mnx)
 integer kph(1)
 dimension ratio(20)
 
@@ -74,24 +75,208 @@ real*8, parameter :: new_crust_thickness = 7.e3
 
 !$OMP parallel private(kk,i,j,k,n,tmpr,depth,iph,press,jbelow,trpres,trpres2,kinc,quad_area,yy)
 !$OMP do schedule(guided)
-do kk = 1 , nmarkers
-  if (mark(kk)%dead.eq.0) cycle
+!!!!!!!!!!!Eunseo's version!!!!!!!!!!!!
+!do kk = 1 , nmarkers
+ ! if (mark(kk)%dead.eq.0) cycle
   ! from ntriag, get element number
-  n = mark(kk)%ntriag
-  k = mod(n - 1, 2) + 1
-  j = mod((n - k) / 2, nz-1) + 1
-  i = (n - k) / 2 / (nz - 1) + 1
+  !n = mark(kk)%ntriag
+  !k = mod(n - 1, 2) + 1
+  !j = mod((n - k) / 2, nz-1) + 1
+  !i = (n - k) / 2 / (nz - 1) + 1
 
-  if( i .eq. nx/2) then
-    if( j  .le. 6 ) then
-      mark(kk)%phase = 3
-    else if( j .ge. 7 .and. j .lt. 15 ) then
-      mark(kk)%phase = 5
-    else
-      mark(kk)%phase = 4
-   end if
-  end if
-enddo
+  !if( i .eq. nx/2) then
+   ! if( j  .le. 6 ) then
+    !  mark(kk)%phase = 3
+    !else if( j .ge. 7 .and. j .lt. 15 ) then
+     ! mark(kk)%phase = 5
+    !else
+     ! mark(kk)%phase = 4
+   !end if
+  !end if
+!enddo
+!!!!!!!!!!!!!!!Eunseo's version end!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!New version!!!!!!!!!!!!!!!!!!!!!!!!
+!do ii = 1,nx-1
+!do jj = 1,nz-1
+!print *,'nx-1=',nx-1
+!print *,'nz-1=',nz-1
+!print *,'nx=',nx
+!print *,'nz=',nz
+!nx-1=         120
+!nz-1=          40
+!nx=         121 node number in x direction
+!nz=          41 node number in z direction
+!print *,'(nx-1)/2=',(nx)*0.5
+!t = 0
+do kk = 1, nmarkers !nmarkers = 43200, number of markers in the model
+!print *,'(nx-1)/2=',(nx)*0.5
+  !print *, 'kk =',kk
+  !print *, 'nmarkers =',nmarkers
+  if (mark(kk)%dead.eq.0) cycle
+  !print *,'mark(kk)%dead =',mark(kk)%dead
+  n = mark(kk)%ntriag
+  !print *,'n = mark(kk)%ntriag =',n
+  k = mod(n - 1, 2) + 1
+!  print *,'mod(17,3)=', mod(17,3)
+ ! print *,'mod(17,5)=', mod(17,5)
+  !print *,'mod(17,3,1) +1 =', mod(17,3) + 1
+  !print *,'k = mod(n - 1, 2) + 1',k
+  j = mod((n - k) / 2, nz-1) + 1
+  !print *,'j = mod((n - k) / 2, nz-1) + 1',j
+  i = (n - k) / 2 / (nz - 1) + 1
+  !print *,'time =',time
+  !print *,'time_max =',time_max
+  !iinj = nx/2
+  !jinj = 1,nelem_inject+1 !node in z
+  !print *,'i =(n - k) / 2 / (nz - 1) + 1',i
+   !print *,'nx/2 =', nx/2
+   !print *,'(nx-1)/2=',(nx-1)*0.
+
+!!!!!!!!!!!!!!!!!!!Hao!!!!!!!!!!!!!!!!!!!!!
+!    if( (i .eq. nx/2) .and. (j .le. nelem_inject+1) ) then !nx/2 = (121/2) = 60 (round off by int), nx is the node number in x direction, however,; i loop from 1 to 40, which is the number of element in y direction.
+!     temp_ave = 0.5 * (temp(j,i) + temp(j,i+1))
+!     if (temp_ave.lt.600) then
+!        mark(kk)%phase = 3
+!      else if (temp_ave.ge.600) then
+!        mark(kk)%phase = 5
+!      end if
+!    end if
+!!!!!!!!!!!!!!!!!!!!!!Hao!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!dtphase!!!!!!!!!!!!!!!!!!
+!do while (time .lt. time_max*0.25)
+!if ( (i .eq. nx/2) .and. (j .le. nelem_inject+1) ) then
+! temp_ave = 0.5 * (temp(j,i) + temp(j,i+1))
+! if (temp_ave.lt.600) then
+! mark(kk)%phase = 3
+! else if (temp_ave.ge.600) then
+! mark(kk)%phase = 4
+!end if
+!end if
+!end do
+!
+!do while ((time .ge. time_max*0.25) .and. (time .lt. time_max*0.5))
+!if ( (i .eq. nx/2) .and. (j .le. nelem_inject+1) ) then
+!temp_ave = 0.5 * (temp(j,i) + temp(j,i+1))
+!if (temp_ave.lt.600) then
+!mark(kk)%phase = 5
+!else if (temp_ave.ge.600) then
+!mark(kk)%phase = 6
+!end if
+!end if
+!end do
+!
+!do while ((time .ge. time_max*0.5) .and. (time .lt. time_max*0.75))
+!if ( (i .eq. nx/2) .and. (j .le. nelem_inject+1) ) then
+!temp_ave = 0.5 * (temp(j,i) + temp(j,i+1))
+!if (temp_ave.lt.600) then
+!mark(kk)%phase = 7
+!else if (temp_ave.ge.600) then
+!mark(kk)%phase = 8
+!end if
+!end if
+!end do
+!
+!do while ((time .ge. time_max*0.75) .and. (time .le. time_max))
+!if ( (i .eq. nx/2) .and. (j .le. nelem_inject+1) ) then
+!temp_ave = 0.5 * (temp(j,i) + temp(j,i+1))
+!if (temp_ave.lt.600) then
+!mark(kk)%phase = 9
+!else if (temp_ave.ge.600) then
+!mark(kk)%phase = 10
+!end if
+!end if
+!end do
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!mul_phase begin!!!!!!!!!!!!!!!!!!!
+     if( (i .eq. nx/2) .and. (j .le. nelem_inject+1) ) then !nx/2 = (121/2) = 60 (round off by int), nx is the node number in x direction, however,; i loop from 1 to 40, which is the number of element in y direction.
+       temp_ave = 0.5 * (temp(j,i) + temp(j,i+1))
+       if ((temp_ave.lt.600) .and. (time .lt. time_max*0.1)) then
+        mark(kk)%phase = 3
+       else if ((temp_ave.lt.600) .and. (time .ge. time_max*0.1) .and. (time .lt. time_max*0.2)) then
+        mark(kk)%phase = 4
+       else if ((temp_ave.lt.600) .and. (time .ge. time_max*0.2) .and. (time .lt. time_max*0.3)) then
+        mark(kk)%phase = 3
+       else if ((temp_ave.lt.600) .and. (time .ge. time_max*0.3) .and. (time .lt. time_max*0.4)) then
+        mark(kk)%phase = 4
+       else if ((temp_ave.lt.600) .and. (time .ge. time_max*0.4) .and. (time .lt. time_max*0.5)) then
+        mark(kk)%phase = 3
+       else if ((temp_ave.lt.600) .and. (time .ge. time_max*0.5) .and. (time .lt. time_max*0.6)) then
+        mark(kk)%phase = 4
+       else if ((temp_ave.lt.600) .and. (time .ge. time_max*0.6) .and. (time .lt. time_max*0.7)) then
+        mark(kk)%phase = 3
+       else if ((temp_ave.lt.600) .and. (time .ge. time_max*0.7) .and. (time .lt. time_max*0.8)) then
+        mark(kk)%phase = 4
+       else if ((temp_ave.lt.600) .and. (time .ge. time_max*0.8) .and. (time .lt. time_max*0.9)) then
+        mark(kk)%phase = 3
+       else if ((temp_ave.lt.600) .and. (time .ge. time_max*0.9) .and. (time .lt. time_max)) then
+        mark(kk)%phase = 4
+       end if
+     end if
+
+     if( (i .eq. nx/2) .and. (j .le. nelem_inject+1) ) then
+       if ((temp_ave.ge.600) .and. (time .lt. time_max*0.1)) then
+        mark(kk)%phase = 5
+       else if ((temp_ave.ge.600) .and. (time .ge. time_max*0.1) .and. (time .lt. time_max*0.2)) then
+        mark(kk)%phase = 6
+       else if ((temp_ave.ge.600) .and. (time .ge. time_max*0.2) .and. (time .lt. time_max*0.3)) then
+        mark(kk)%phase = 5
+       else if ((temp_ave.ge.600) .and. (time .ge. time_max*0.3) .and. (time .lt. time_max*0.4)) then
+        mark(kk)%phase = 6
+       else if ((temp_ave.ge.600) .and. (time .ge. time_max*0.4) .and. (time .lt. time_max*0.5)) then
+        mark(kk)%phase = 5
+       else if ((temp_ave.ge.600) .and. (time .ge. time_max*0.5) .and. (time .lt. time_max*0.6)) then
+        mark(kk)%phase = 6
+       else if ((temp_ave.ge.600) .and. (time .ge. time_max*0.6) .and. (time .lt. time_max*0.7)) then
+        mark(kk)%phase = 5
+       else if ((temp_ave.ge.600) .and. (time .ge. time_max*0.7) .and. (time .lt. time_max*0.8)) then
+        mark(kk)%phase = 6
+       else if ((temp_ave.ge.600) .and. (time .ge. time_max*0.8) .and. (time .lt. time_max*0.9)) then
+        mark(kk)%phase = 5
+       else if ((temp_ave.ge.600) .and. (time .ge. time_max*0.9) .and. (time .lt. time_max)) then
+        mark(kk)%phase = 6
+       end if
+     end if
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!mul_phase end!!!!!!!!!!!!!!!!!!!!!
+!temp_ave = 0.5 * (temp(j,i) + temp(j,i+1))
+!if (i .eq. nx/2) .and. (j .le. nelem_inject+1) .and. (temp_ave .lt. 600) .and. (time .lt. time_max*0.25) then !nx/2 = (121/2) = 60 (round off by int), nx is the node number in x direction, however,; i loop from 1 to 40, which is the number of element in y direction.
+!    mark(kk)%phase =3
+!if (i .eq. nx/2) .and. (j .le. nelem_inject+1) .and. (temp_ave .lt. 600) .and. (time .ge. time_max*0.25) .and. (time .lt. time_max*0.5) then
+!    mark(kk)%phase =4
+!if (i .eq. nx/2) .and. (j .le. nelem_inject+1) .and. (temp_ave .lt. 600) .and. (time .ge. time_max*0.5)  .and. (time .lt. time_max*0.75) then
+!    mark(kk)%phase =5
+!if (i .eq. nx/2) .and. (j .le. nelem_inject+1) .and. (temp_ave .lt. 600) .and. (time .ge. time_max*0.75) .and. (time .lt. time_max) then
+!    mark(kk)%phase =6
+!
+!
+!if (i .eq. nx/2) .and. (j .le. nelem_inject+1) .and. (temp_ave .ge. 600) .and. (time .lt. time_max*0.25) then
+!    mark(kk)%phase =7
+!if (i .eq. nx/2) .and. (j .le. nelem_inject+1) .and. (temp_ave .ge. 600) .and. (time .ge. time_max*0.25) .and. (time .lt. time_max*0.5) then
+!    mark(kk)%phase =8
+!if (i .eq. nx/2) .and. (j .le. nelem_inject+1) .and. (temp_ave .ge. 600) .and. (time .ge. time_max*0.5) .and. (time .lt. time_max*0.75) then
+!    mark(kk)%phase =9
+!else if (i .eq. nx/2) .and. (j .le. nelem_inject+1) .and. (temp_ave .ge. 600) .and. (time .ge. time_max*0.75) .and. (time .lt. time_max) then
+!    mark(kk)%phase =10
+!end if
+!
+!if((i .eq. nx/2) .and. (j .le. nelem_inject+1) .and. (time .lt. time_max*0.25)) then
+
+!!!!!!!!!!!!!!!!!!!!!!dtphase!!!!!!!!!!!!!!!!!!
+!if( i .eq. nx/2) then
+! if( j  .le. 6 ) then
+!  mark(kk)%phase = 3
+!else if( j .ge. 7 .and. j .lt. 15 ) then
+! mark(kk)%phase = 5
+!else
+! mark(kk)%phase = 4
+!end if
+!end if
+!t = t + dt
+end do
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!end do
+!end do
+!!!!!!!!!!!!!!!New version end!!!!!!!!!!!!!!!!!!!!
 !$OMP end do
 !$OMP end parallel
 
