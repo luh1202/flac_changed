@@ -11,8 +11,8 @@ subroutine marker2elem
   ! Find the triangle in which each marker belongs
 
 
-  do i = 1 , nx-1
-      do j = 1 , nz-1
+  do i = 1 , nx-1 !element number in x direction
+      do j = 1 , nz-1 !element number in z direction
           kinc = sum(nphase_counter(:,j,i))
 
           !  if there are too few markers in the element, create a new one

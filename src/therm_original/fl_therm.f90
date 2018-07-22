@@ -29,7 +29,6 @@ heat_latent_magma = 4.2d5  ! J/kg, latent heat of freezing magma
 
 
 ntherm = ntherm+1
-
 !ntherm = ntherm
 ! saving old temperature
 !$DIR PREFER_PARALLEL
@@ -49,7 +48,7 @@ dt_therm = dt
 
 !$OMP Parallel private(i,j,iph,cp_eff,cond_eff,dissip,diff,quad_area, &
 !$OMP                  x1,x2,x3,x4,y1,y2,y3,y4,t1,t2,t3,t4,tmpr, &
-!$OMP                  qs,real_area13,area_n,rhs,temp_ave,zcord_ave)
+!$OMP                  qs,real_area13,area_n,rhs)
 !$OMP do
 do i = 1,nx-1
     j = 1  ! top
@@ -61,6 +60,7 @@ do i = 1,nx-1
 
     temp(j,i  ) = temp(j,i  ) + andesitic_melt_vol(i  ) * heat_latent_magma / quad_area / cp_eff
     temp(j,i+1) = temp(j,i+1) + andesitic_melt_vol(i+1) * heat_latent_magma / quad_area / cp_eff
+
 end do
 !$OMP end do
 
@@ -69,18 +69,10 @@ do i = 1,nx-1
     do j = 1,nz-1
 
         iph = iphase(j,i)
+
         ! Calculating effective material properties
         cp_eff = Eff_cp( j,i )
-
         cond_eff = Eff_conduct( j,i )
-
-        !!!!!!!!!!!!!begin hydro Hao!!!!!!!!!!
-        temp_ave = 0.25 * (temp(j,i) + temp(j+1,i) + temp(j,i+1) + temp(j+1,i+1))
-        zcord_ave = 0.25 * (cord(j,i,2) + cord(j+1,i,2) + cord(j,i+1,2) + cord(j+1,i+1,2))
-        if (temp_ave.lt.600 .and. zcord_ave.gt.-7e3) then
-            cond_eff = 1.0 * cond_eff
-        end if
-        !!!!!!!!!!!!!!end hydro Hao!!!!!!!!!!!!
 
         ! if shearh-heating flag is true
         if( ishearh.eq.1 .and. itherm.ne.2 ) then
@@ -120,6 +112,7 @@ do i = 1,nx-1
         flux(j,i,2,2) = -diff * ( t3*(x4-x2)+t2*(x3-x4)+t4*(x2-x3) ) * area(j,i,2)
 
     end do
+
 end do
 !$OMP end do
 
@@ -266,7 +259,7 @@ do i = 1,nx
 end do
 !$OMP end do
 
-!temp(1:nz,1:nx) = temp00(1:nz,1:nx)
+temp(1:nz,1:nx) = temp00(1:nz,1:nx)
 
 ! Boundary conditions: dt/dx =0 on left and right  
 !$OMP do

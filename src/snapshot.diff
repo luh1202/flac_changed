@@ -1,7 +1,0 @@
-Flags used to compile the code:
-   CXX=g++ opt= openmp=
-   PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-   LD_LIBRARY_PATH=
-
-
-==== Summary of the code ====

@@ -1,7 +1,7 @@
 
 !  Rheology (Update stresses depending on rheology)
 !  Calculate total finite strain and plastic strain  
-    
+
 subroutine fl_rheol
 use arrays
 include 'precision.inc'
@@ -28,85 +28,16 @@ if(irh.eq.11) call init_visc
 ! Initial stress boundary condition
 ! Accretional Stresses
 if (ny_inject.gt.0) then
-         sarc1 = 0.
-         sarc2 = 0. 
-         if (ny_inject.eq.1) iinj = 1
-         if (ny_inject.eq.2) iinj = nx/2 
-         !write (*,*) iinj
-         !nelem_inject = nz-1
-         !average dx for injection:
-         dxinj = 0.
-         !do jinj = 1,6
-         !   iph = 3
-         !   iph=iphase(jinj,iinj)
-         !print *, iph
-         !   dxinj=dxinj+cord(jinj,iinj+1,1)-cord(jinj,iinj,1)
-         !end do
-         !do jinj = 7,15
-         !   iph = 5
-         !iph=iphase(jinj,iinj)
-         !print *, iph
-         !dxinj=dxinj+cord(jinj,iinj+1,1)-cord(jinj,iinj,1)
-         !end do
+  sarc1 = 0.
+  sarc2 = 0. 
+  if (ny_inject.eq.1) iinj = 1
+  if (ny_inject.eq.2) iinj = (nx-1)/2
 
-
-
-         !!!!!!!!!!!!!!!!!!!!!!!!!original sarc1&2 determaination part!!!!!!!!!!!!!!!!!!!!!!
-         do jinj = 1,nelem_inject
-            iph=iphase(jinj,iinj)
-            dxinj=dxinj+cord(jinj,iinj+1,1)-cord(jinj,iinj,1)
-         enddo
-         !!!!!!!!!!!!!!!!!!!!!!!!!
-         dxinj = dxinj/nelem_inject
-          !Constants Elastic:
-         poiss = 0.5*rl(iph)/(rl(iph)+rm(iph))
-         young = rm(iph)*2.*(1.+poiss)
-          !Additional Stress:
-         sarc1 = -young/(1.-poiss*poiss)*rate_inject/dxinj*dt
-         sarc2 = sarc1*poiss/(1.-poiss)
-         !!!!!!!!!!!!!!!!!!!!!!!!end of original sarc1&2 determaination!!!!!!!!!!!!!!!!!!!!!!!
-
-
-         !write(*,*) sarc1,sarc2
-
-
-         !!!!!!!!!!!!!!!!!!!!!!new coding for time-dependent diking rate for different layer!!!!!!!!!!!!!!!!!!!!!!
-         !dxinj1 = 0.
-         !dxinj2 = 0.
-
-!         do jinj = 1,nelem_inject1
-!         iph=iphase(jinj,iinj)
-!         !iph=3
-!         dxinj=dxinj+cord(jinj,iinj+1,1)-cord(jinj,iinj,1)
-!         dxinj = dxinj/nelem_inject1
-!         ! Constants Elastic:
-!         poiss = 0.5*rl(iph)/(rl(iph)+rm(iph))
-!         young = rm(iph)*2.*(1.+poiss)
-!         ! Additional Stress:
-!         sarc1 = -young/(1.-poiss*poiss)*rate_inject1/dxinj*dt
-!         sarc2 = sarc1*poiss/(1.-poiss)
-!         print *, rate_inject1
-!         enddo
-!
-!         do jinj = nelem_inject1+1, nelem_inject2
-!         !iph=5
-!         iph=iphase(jinj,iinj)
-!         dxinj=dxinj+cord(jinj,iinj+1,1)-cord(jinj,iinj,1)
-!         dxinj = dxinj/(nelem_inject2 - nelem_inject1)
-!         ! Constants Elastic:
-!         poiss = 0.5*rl(iph)/(rl(iph)+rm(iph))
-!         young = rm(iph)*2.*(1.+poiss)
-!         ! Additional Stress:
-!         !rate_inject2 = rate_inject2
-!         !print *, rate_inject2
-!         sarc1 = -young/(1.-poiss*poiss)*rate_inject2/dxinj*dt
-!         sarc2 = sarc1*poiss/(1.-poiss)
-!         print *, rate_inject2
-!         enddo
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!end!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-
+  dxinj = 0.
+  do jinj = 1,nelem_inject
+    dxinj=dxinj+cord(jinj,iinj+1,1)-cord(jinj,iinj,1)
+  enddo
+  dxinj = dxinj/nelem_inject
 endif
 
 irh_mark = 0
@@ -130,13 +61,19 @@ do 3 i = 1,nx-1
         ! iphase (j,i) is number of a phase NOT a rheology
         iph = iphase(j,i)
         irh = irheol(iph)
-
-!        if(ny_inject.gt.0.and.j.le.nelem_inject) then
-!        if(i.eq.iinj.or.i.eq.iinj-1) irh_mark = 1
-!        if(i.eq.iinj) irh = 3 
-!        endif
-
-        ! Elastic modules & viscosity & plastic properties
+        
+        temp_ave = 0.25 * (temp(j,i) + temp(j+1,i) + temp(j,i+1) + temp(j+1,i+1))
+        if (temp_ave.le.600) then
+            rate_inject = 1.0 * rate_inject
+        else
+            rate_inject = 1.0 * rate_inject
+        end if
+        if(ny_inject.gt.0.and.j.le.nelem_inject) then
+          poiss = 0.5*rl(iph)/(rl(iph)+rm(iph))
+          young = rm(iph)*2.*(1.+poiss)
+          sarc1 = -young/(1.-poiss*poiss)*rate_inject/dxinj*dt
+          sarc2 = sarc1*poiss/(1.-poiss)
+        endif
         bulkm = rl(iph) + 2.*rm(iph)/3.
         rmu   = rm(iph)
 
@@ -144,20 +81,18 @@ do 3 i = 1,nx-1
         stherm = 0.
         if (istress_therm.gt.0) stherm = -alfa(iph)*bulkm*(temp(j,i)-temp0(j,i))
 
-
         ! Preparation of plastic properties
         if (irh.eq.6 .or. irh.ge.11) call pre_plast(i,j,coh,phi,psi,hardn)
-              
+
         ! Re-evaluate viscosity
-        if (irh.eq.3 .or. irh.eq.12) then 
+        if (irh.eq.7 .or. irh.eq.12) then
             if( mod(nloop,ifreq_visc).eq.0 .OR. ireset.eq.1 ) visn(j,i) = Eff_visc(j,i)
-!            if (ny_inject.gt.0.and.i.eq.iinj) visn(j,i) = v_min
+        !            if (ny_inject.gt.0.and.i.eq.iinj) visn(j,i) = v_min
         endif
         vis = visn(j,i)
-
+        !print *,'6'
         ! Cycle by triangles
         do k = 1,4
-
             ! Incremental strains
             de11 = strainr(1,k,j,i)*dt
             de22 = strainr(2,k,j,i)*dt
@@ -169,18 +104,19 @@ do 3 i = 1,nx-1
             if(ny_inject.gt.0.and.j.le.nelem_inject) then
                 !XXX: iinj is un-init'd if ny_inject is not 1 or 2.
                 if(i.eq.iinj) then
-                    s11p(k) = stress0(j,i,1,k) + stherm +sarc1
-                    s22p(k) = stress0(j,i,2,k) + stherm +sarc2
+                    s11p(k) = stress0(j,i,1,k) + sarc1
+                    s22p(k) = stress0(j,i,2,k) + sarc2
                     !!            irh = 1
                 endif
             endif
+            !print *,'7'
             s12p(k) = stress0(j,i,3,k) 
             s33p(k) = stress0(j,i,4,k) + stherm
             s11v(k) = s11p(k)
             s22v(k) = s22p(k)
             s12v(k) = s12p(k)
             s33v(k) = s33p(k)
-!!            if(abs(sarc11).gt.0.) write(*,*) i,j,sarc11,sarc22
+        !!            if(abs(sarc11).gt.0.) write(*,*) i,j,sarc11,sarc22
             if (irh.eq.1) then
                 ! elastic
                 call elastic(bulkm,rmu,s11p(k),s22p(k),s33p(k),s12p(k),de11,de22,de12)
@@ -189,11 +125,11 @@ do 3 i = 1,nx-1
                 stress0(j,i,2,k) = s22p(k)
                 stress0(j,i,3,k) = s12p(k)
                 stress0(j,i,4,k) = s33p(k)
-
-            elseif (irh.eq.3) then
+            !print *,'8'
+            elseif (irh.eq.7) then
                 ! viscous
                 call maxwell(bulkm,rmu,vis,s11v(k),s22v(k),s33v(k),s12v(k),de11,de22,de33,de12,dv,&
-                     ndim,dt,curr_devmax,curr_dvmax)
+                    ndim,dt,curr_devmax,curr_dvmax)
                 irheol_fl(j,i) = -1  
                 stress0(j,i,1,k) = s11v(k)
                 stress0(j,i,2,k) = s22v(k)
@@ -203,13 +139,13 @@ do 3 i = 1,nx-1
             elseif (irh.eq.6) then
                 ! plastic
                 call plastic(bulkm,rmu,coh,phi,psi,depl(k),ipls,diss,hardn,s11p(k),s22p(k),s33p(k),s12p(k),de11,de22,de33,de12,&
-                     ten_off,ndim,irh_mark)
+                    ten_off,ndim,irh_mark)
                 irheol_fl(j,i) = 1
                 stress0(j,i,1,k) = s11p(k)
                 stress0(j,i,2,k) = s22p(k)
                 stress0(j,i,3,k) = s12p(k)
                 stress0(j,i,4,k) = s33p(k)
-
+            !print *,'9'
             elseif (irh.ge.11) then 
                 ! Mixed rheology (Maxwell or plastic)
                 if( rh_sel ) then
@@ -240,14 +176,14 @@ do 3 i = 1,nx-1
                 endif
             endif
         enddo
-
+        !print *,'10'
         if( irh.ge.11 .AND. rh_sel ) then
             ! deside - elasto-plastic or viscous deformation
             sII_plas = (s11p(1)+s11p(2)+s11p(3)+s11p(4)-s22p(1)-s22p(2)-s22p(3)-s22p(4))**2 &
-                     + 4*(s12p(1)+s12p(2)+s12p(3)+s12p(4))**2
+                    + 4*(s12p(1)+s12p(2)+s12p(3)+s12p(4))**2
 
             sII_visc = (s11v(1)+s11v(2)+s11v(3)+s11v(4)-s22v(1)-s22v(2)-s22v(3)-s22v(4))**2 &
-                     + 4*(s12v(1)+s12v(2)+s12v(3)+s12v(4))**2
+                    + 4*(s12v(1)+s12v(2)+s12v(3)+s12v(4))**2
 
             if (sII_plas .lt. sII_visc) then
                 do k = 1, 4
@@ -267,11 +203,11 @@ do 3 i = 1,nx-1
                 irheol_fl (j,i) = -1
             endif
         endif
-
+        !print *,'11'
 
         ! Averaging of isotropic stresses for pair of elements
         if (mix_stress .eq. 1 ) then
-        
+
             ! For A and B couple:
             ! area(n,it) is INVERSE of "real" DOUBLE area (=1./det)
             quad_area = 1./(area(j,i,1)+area(j,i,2))
@@ -293,21 +229,21 @@ do 3 i = 1,nx-1
             stress0(j,i,1,4) = stress0(j,i,1,4) - s0b + s0
             stress0(j,i,2,4) = stress0(j,i,2,4) - s0b + s0
         endif
-
+        !print *,'12'
         if (irh.eq.6 .or. irh.ge.11) then
             !  ACCUMULATED PLASTIC STRAIN
             ! Average the strain for pair of the triangles
             ! Note that area (n,it) is inverse of double area !!!!!
             aps(j,i) = aps(j,i) &
-                 + 0.5*( depl(1)*area(j,i,2)+depl(2)*area(j,i,1) ) / (area(j,i,1)+area(j,i,2)) &
-                 + 0.5*( depl(3)*area(j,i,4)+depl(4)*area(j,i,3) ) / (area(j,i,3)+area(j,i,4))
+                + 0.5*( depl(1)*area(j,i,2)+depl(2)*area(j,i,1) ) / (area(j,i,1)+area(j,i,2)) &
+                + 0.5*( depl(3)*area(j,i,4)+depl(4)*area(j,i,3) ) / (area(j,i,3)+area(j,i,4))
             if( aps(j,i) .lt. 0. ) aps(j,i) = 0.
 
             !	write(*,*) depl(1),depl(2),depl(3),depl(4),area(j,i,1),area(j,i,2),area(j,i,3),area(j,i,4)
-
+            !print *,'13'
             ! LINEAR HEALING OF THE PLASTIC STRAIN
             if (tau_heal .ne. 0.) &
-                 aps (j,i) = aps (j,i)/(1.+dt/tau_heal)
+                aps (j,i) = aps (j,i)/(1.+dt/tau_heal)
             if (ny_inject.gt.0.and.i.eq.iinj) aps (j,i) = 0.
         end if
 
@@ -315,7 +251,7 @@ do 3 i = 1,nx-1
         strain(j,i,1) = strain(j,i,1) + 0.25*dt*(strainr(1,1,j,i)+strainr(1,2,j,i)+strainr(1,3,j,i)+strainr(1,4,j,i))
         strain(j,i,2) = strain(j,i,2) + 0.25*dt*(strainr(2,1,j,i)+strainr(2,2,j,i)+strainr(2,3,j,i)+strainr(2,4,j,i))
         strain(j,i,3) = strain(j,i,3) + 0.25*dt*(strainr(3,1,j,i)+strainr(3,2,j,i)+strainr(3,3,j,i)+strainr(3,4,j,i))
-
+        !print *,'14'
 3 continue
 !$OMP end do
 !$OMP end parallel
