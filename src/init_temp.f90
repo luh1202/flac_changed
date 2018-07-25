@@ -64,7 +64,6 @@ case (1)
     enddo
     do i = 1, nx
         temp(nz,i) = temp(nz-1,i)
-
     enddo
 
     open( 1, file='temp0.dat' )
@@ -108,12 +107,13 @@ case (2)
                     ! depth in km
                     y = (0 - cord(j,i,2)) / sqrt(4 * diffusivity * age * 1.e6 * sec_year)
                     !print *, cord(1,i,2), cord(j,i,2), y
-
-                    temp(j,i) = t_top + (t_bot - t_top) * erf(y)
-                    !print *, t_top, t_bot, erf(y)
+                    if(cord(j,i,2) >= -5e3) then
+                      temp(j,i) = t_top + (t_bot - t_top) * erf(y)
+                    else
+                      temp(j,i) = 1300.0
+                    endif
+!                    print *, i,j,cord(j,i,2), temp(j,i)
                     temp00(j,i) = temp(j,i)
-                    !print *, temp00(j,i)
-                    !print *, j, age, -cord(j,i,2), temp(j,i)
                 enddo
 
             enddo

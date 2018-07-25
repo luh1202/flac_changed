@@ -11,8 +11,8 @@ include 'arrays.inc'
 
 ! Update Thermal State
 ! Skip the therm calculations if itherm = 3
+call fl_injectheat
 call fl_therm
-
 
 if (itherm .eq.2) goto 500  ! Thermal calculation only
 
