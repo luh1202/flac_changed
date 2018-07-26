@@ -234,16 +234,17 @@ do 3 i = 1,nx-1
             !  ACCUMULATED PLASTIC STRAIN
             ! Average the strain for pair of the triangles
             ! Note that area (n,it) is inverse of double area !!!!!
-            aps(j,i) = aps(j,i) &
-                + 0.5*( depl(1)*area(j,i,2)+depl(2)*area(j,i,1) ) / (area(j,i,1)+area(j,i,2)) &
+            dps = 0.5*( depl(1)*area(j,i,2)+depl(2)*area(j,i,1) ) / (area(j,i,1)+area(j,i,2)) &
                 + 0.5*( depl(3)*area(j,i,4)+depl(4)*area(j,i,3) ) / (area(j,i,3)+area(j,i,4))
+            aps(j,i) = aps(j,i) + dps 
             if( aps(j,i) .lt. 0. ) aps(j,i) = 0.
 
             !	write(*,*) depl(1),depl(2),depl(3),depl(4),area(j,i,1),area(j,i,2),area(j,i,3),area(j,i,4)
             !print *,'13'
             ! LINEAR HEALING OF THE PLASTIC STRAIN
-            if (tau_heal .ne. 0.) &
-                aps (j,i) = aps (j,i)/(1.+dt/tau_heal)
+            if (tau_heal .ne. 0. .and. dps .le. 0.) then
+              aps(j,i) = aps(j,i) * (1. - dt/tau_heal)
+            endif
             if (ny_inject.gt.0.and.i.eq.iinj) aps (j,i) = 0.
         end if
 
