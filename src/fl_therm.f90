@@ -76,8 +76,9 @@ do i = 1,nx-1
 
         !!!!!!!!!!!!!begin hydro Hao!!!!!!!!!!
         temp_ave = 0.25 * (temp(j,i) + temp(j+1,i) + temp(j,i+1) + temp(j+1,i+1))
+        zcord_top = 0.25 * (cord(1,i,2) + cord(2,i,2) + cord(1,i+1,2) + cord(2,i+1,2))
         zcord_ave = 0.25 * (cord(j,i,2) + cord(j+1,i,2) + cord(j,i+1,2) + cord(j+1,i+1,2))
-        if (temp_ave.lt.600 .and. zcord_ave.gt.-7e3) then
+        if (temp_ave.lt.600. .and. (zcord_top-zcord_ave).le.7e3) then
             cond_eff = 8.0 * cond_eff
         end if
         !!!!!!!!!!!!!!end hydro Hao!!!!!!!!!!!!

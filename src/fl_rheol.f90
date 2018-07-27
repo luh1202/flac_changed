@@ -242,10 +242,18 @@ do 3 i = 1,nx-1
             !	write(*,*) depl(1),depl(2),depl(3),depl(4),area(j,i,1),area(j,i,2),area(j,i,3),area(j,i,4)
             !print *,'13'
             ! LINEAR HEALING OF THE PLASTIC STRAIN
-            if (tau_heal .ne. 0. .and. dps .le. 0.) then
-              aps(j,i) = aps(j,i) * (1. - dt/tau_heal)
+            !if (tau_heal .ne. 0. .and. dps .le. 0.) then
+            if (tau_heal .ne. 0. .and. aps(j,i) .gt. 0.) then
+              sr11 = 0.25 * (strainr(1,1,j,i)+strainr(1,2,j,i)+strainr(1,3,j,i)+strainr(1,4,j,i))
+              sr22 = 0.25 * (strainr(2,1,j,i)+strainr(2,2,j,i)+strainr(2,3,j,i)+strainr(2,4,j,i))
+              sr12 = 0.25 * (strainr(3,1,j,i)+strainr(3,2,j,i)+strainr(3,3,j,i)+strainr(3,4,j,i))
+              srJ2 = 0.5 * sqrt((sr11-sr22)**2 + 4*sr12*sr12)
+              daps = srJ2 - aps(j,i)/tau_heal
+              aps(j,i) = aps(j,i) + dt * daps
+              if( aps(j,i) .lt. 0. ) aps(j,i) = 0.
             endif
-            if (ny_inject.gt.0.and.i.eq.iinj) aps (j,i) = 0.
+            !if (ny_inject.gt.0.and.i.eq.iinj) aps (j,i) = 0.
+            if (ny_inject.gt.0.and. (i.eq.iinj .or. i.eq.(iinj-1))) aps (j,i) = 0.
         end if
 
         ! TOTAL FINITE STRAIN
