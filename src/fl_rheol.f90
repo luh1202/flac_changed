@@ -248,12 +248,15 @@ do 3 i = 1,nx-1
               sr22 = 0.25 * (strainr(2,1,j,i)+strainr(2,2,j,i)+strainr(2,3,j,i)+strainr(2,4,j,i))
               sr12 = 0.25 * (strainr(3,1,j,i)+strainr(3,2,j,i)+strainr(3,3,j,i)+strainr(3,4,j,i))
               srJ2 = 0.5 * sqrt((sr11-sr22)**2 + 4*sr12*sr12)
-              daps = srJ2 - aps(j,i)/tau_heal
+              daps = -aps(j,i)/tau_heal
+              if (srJ2 .ge. 1.e-13) then
+               daps = daps + srJ2
+              endif
               aps(j,i) = aps(j,i) + dt * daps
               if( aps(j,i) .lt. 0. ) aps(j,i) = 0.
             endif
-            !if (ny_inject.gt.0.and.i.eq.iinj) aps (j,i) = 0.
-            if (ny_inject.gt.0.and. (i.eq.iinj .or. i.eq.(iinj-1))) aps (j,i) = 0.
+            if (ny_inject.gt.0 .and. i.eq.iinj) aps (j,i) = 0.
+            !if (ny_inject.gt.0.and. (i.le.(iinj+1))) aps (j,i) = 0.
         end if
 
         ! TOTAL FINITE STRAIN
