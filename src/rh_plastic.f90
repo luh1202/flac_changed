@@ -15,11 +15,11 @@ real*8, parameter :: degrad = pi/180.
 real*8, parameter :: c4d3 = 4./3.
 real*8, parameter :: c2d3 = 2./3.
 ! press_add formaely was passed by a parameter. in my case it is always zero.
-real*8, parameter :: press_add = 0.
+real*8, parameter :: press_add = 0. !4.e7
 
 real*8 sphi, spsi, anphi, anpsi, amc, e1, e2, x1, ten_max, &
      s11i, s22i, s12i, s33i, sdif, s0, rad, si, sii, s1, s2, s3, psdif, &
-     fs, alams, dep1, dep3, depm, cs2, si2, dc2, dss
+     fs, alams, dep1, dep3, depm, cs2, si2, dc2, dss, sphii, anphii
 integer icase
 
 
@@ -32,9 +32,12 @@ ipls = 0
       
 sphi  = dsin(phi * degrad)
 spsi  = dsin(psi * degrad)
+!sphii = dcos(phi * degrad)
+!anphii = sphii / (1. - sphi)
 anphi = (1.+ sphi) / (1.- sphi)
 anpsi = (1.+ spsi) / (1.- spsi)
 amc   = 2.0 * coh * sqrt (anphi)
+!amc =  2.0 * coh * anphii
 e1    = bulkm + c4d3 * rmu
 e2    = bulkm - c2d3 * rmu
 x1    = (e1 - e2*anpsi + e1*anphi*anpsi - e2*anphi)
@@ -54,9 +57,15 @@ end if
 !---- which has 2 components: add pressure due to application of forces from the top 
 !---- and subtract pressure of the fluid
 s11i = s11 + (de22 + de33) *e2  + de11 *e1 - press_add
+!open (unit = 1, file = "s11.txt")
+!write (1,*) "Here are the s11 ", s11i
 s22i = s22 + (de11 + de33) *e2  + de22 *e1 - press_add
+!open (unit = 2, file = "s22.txt")
+!write (2,*) "Here are the s22 ", s22i
 s12i = s12 + de12 * 2.0 * rmu
 s33i = s33 + (de11 + de22) *e2  + de33 *e1 - press_add
+!open (unit = 3, file = "s33.txt")
+!write (3,*) "Here are the s33 ", s33i
 sdif = s11i - s22i
 s0   = 0.5 * (s11i + s22i)
 rad  = 0.5 * sqrt(sdif*sdif + 4.0 *s12i*s12i)
@@ -150,6 +159,7 @@ if (fs .lt. 0.0) then
     dep3 = -alams*anpsi
 
     ! FOR 2D caculations
+    !dont touch this part
     depm = 0.5*(dep1+dep3)
     depls = 0.5*abs(dep1-dep3)
 
@@ -243,6 +253,7 @@ s22 = s22 + press_add
 s33 = s33 + press_add
 return
 end
+
 
 
 

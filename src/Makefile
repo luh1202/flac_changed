@@ -146,6 +146,7 @@ SRCS =	\
 	fl_rheol.f90 \
 	fl_srate.f90 \
 	fl_therm.f90 \
+	fl_injectheat.f90 \
 	flac.f90 \
 	functions.f90 \
 	init_areas.f90 \
@@ -177,9 +178,8 @@ SRCS =	\
 	saveflac.f90 \
 	setflac.f90 \
 	user_ab.f90 \
-	user_luc.f90
-
-
+	user_luc.f90 \
+	user_lu.f90
 MODULES = $(MODULE_SRCS:.f90=.mod)
 MODULE_OBJS = $(MODULE_SRCS:.f90=.o)
 OBJS = $(SRCS:.f90=.o)

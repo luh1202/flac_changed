@@ -28,8 +28,8 @@ do 51 i = 1,nx-1
         dh1 = cord (j,i  ,2) - cord (j+1,i  ,2)
         dh2 = cord (j,i+1,2) - cord (j+1,i+1,2)
         dh  = 0.5 * (dh1+dh2)
-        !dPT = densT * g * dh
-        dPT = 3135 * g * dh
+        dPT = densT * g * dh
+        !dPT = 3135 * g * dh
 
         dP = dPT * ( 1 - beta(iph)*rogh ) / ( 1 + beta(iph)/2*dPT )
 

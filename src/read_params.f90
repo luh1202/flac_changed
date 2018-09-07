@@ -242,7 +242,17 @@ call AdvanceToNextInputLine( 4 )
 read(4,*)igeotherm,g_x0,g_y0c, g_amplitude,g_width 
 call AdvanceToNextInputLine( 4 )
 !read(4,*) ny_inject, nelem_inject, nelem_inject1, nelem_inject2, rate_inject1, rate_inject2
-read(4,*) ny_inject, nelem_inject, rate_inject
+!read(4,*) ny_inject, nelem_inject, rate_inject_brittle, rate_inject_ductile
+read(4,*) ny_inject, nelem_inject, rate_inject_brittle, rate_inject_ductile
+call AdvanceToNextInputLine( 4 )
+read(4,*)rate_inject_ductile_e, rate_inject_ductile_s
+call AdvanceToNextInputLine( 4 )
+read(4,*) iinj1, iinj2, jinj1, jinj2, xlatheat, ratfac, fnu
+call AdvanceToNextInputLine( 4 ) ! add to the last line of the input file and param.inc
+!it=1 time-independent it=2 time-dependent; y = fa*sine(2pi/fb*time)+fc
+!ip=1 turn on the hydromineral lame change; ip=2 turn off
+!fsr full spreading rate
+read(4,*) it, fa, fb, fc, fsr, ip
 ! REMESHING
 call AdvanceToNextInputLine( 4 )
 read(4,*)  ny_rem, mode_rem, ntest_rem, angle_rem
@@ -350,6 +360,7 @@ call ReadIntrusions()  ! - see user_ab.f90
 
 call ReadHydro()       ! - see user_luc.f90
 
+!call ReadHeatinject()    ! - see user_Lu.f90 (6/28/18)!
 return
 end
 

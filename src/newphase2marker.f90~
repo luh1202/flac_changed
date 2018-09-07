@@ -107,7 +107,7 @@ real*8, parameter :: new_crust_thickness = 7.e3
 !nx=         121 node number in x direction
 !nz=          41 node number in z direction
 !print *,'(nx-1)/2=',(nx)*0.5
-!t = 0
+
 do kk = 1, nmarkers !nmarkers = 43200, number of markers in the model
 !print *,'(nx-1)/2=',(nx)*0.5
   !print *, 'kk =',kk
@@ -124,78 +124,37 @@ do kk = 1, nmarkers !nmarkers = 43200, number of markers in the model
   j = mod((n - k) / 2, nz-1) + 1
   !print *,'j = mod((n - k) / 2, nz-1) + 1',j
   i = (n - k) / 2 / (nz - 1) + 1
-  !print *,'time =',time
-  !print *,'time_max =',time_max
   !iinj = nx/2
   !jinj = 1,nelem_inject+1 !node in z
   !print *,'i =(n - k) / 2 / (nz - 1) + 1',i
    !print *,'nx/2 =', nx/2
    !print *,'(nx-1)/2=',(nx-1)*0.
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!mul_phase begin!!!!!!!!!!!!!!!!!!!
-temp_ave = 0.25 * (temp(j,i) + temp(j,i+1) + temp(j+1,i) + temp(j+1,i+1))
-zcord_ave = 0.25 * (cord(j,i,2) + cord(j+1,i,2) + cord(j,i+1,2) + cord(j+1,i+1,2))
-     if( (i .eq. nx/2) .and. (j .le. nelem_inject+1) ) then !nx/2 = (121/2) = 60 (round off by int), nx is the node number in x direction, however,; i loop from 1 to 40, which is the number of element in y direction.
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if( (i .eq. nx/2) .and. (j .le. nelem_inject+1) ) then !nx/2 = (121/2) = 60 (round off by int), nx is the node number in x direction, however,; i loop from 1 to 40, which is the number of element in y direction.
+     temp_ave = 0.5 * (temp(j,i) + temp(j,i+1))
+     if (temp_ave.lt.600) then
+        mark(kk)%phase = 3
+      else if (temp_ave.ge.600) then
+       mark(kk)%phase = 5
+      end if
+      end if
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-!       if ((temp_ave.le.600) .and. (time .lt. time_max*0.5).and.((zcord_top-zcord_ave) .le. 7e3) .and.(fa * SIN(2 * pi/fb * time) + fc).ge.0.6) then
-!       mark(kk)%phase = 3
-!       else if ((temp_ave.le.600) .and. (time .ge. time_max*0.5) .and.((zcord_top-zcord_ave) .le. 7e3) .and.(fa * SIN(2 * pi/fb * time) + fc).ge.0.6) then
-!       mark(kk)%phase = 4
-       !if ((temp_ave.le.600) .and. (time .lt. time_max*0.5).and.((zcord_top-zcord_ave) .le. 7e3)) then
-       !mark(kk)%phase = 3
-       !else if ((temp_ave.le.600) .and. (time .ge. time_max*0.5) .and.((zcord_top-zcord_ave) .le. 7e3)) then
-       !mark(kk)%phase = 3
-
-       if ((temp_ave.le.600) .and. (time .lt. time_max*0.1)) then
-        mark(kk)%phase = 3
-       else if ((temp_ave.le.600) .and. (time .ge. time_max*0.1) .and. (time .lt. time_max*0.2)) then
-        mark(kk)%phase = 3
-       else if ((temp_ave.le.600) .and. (time .ge. time_max*0.2) .and. (time .lt. time_max*0.3)) then
-        mark(kk)%phase = 3
-       else if ((temp_ave.le.600) .and. (time .ge. time_max*0.3) .and. (time .lt. time_max*0.4)) then
-        mark(kk)%phase = 3
-       else if ((temp_ave.le.600) .and. (time .ge. time_max*0.4) .and. (time .lt. time_max*0.5)) then
-        mark(kk)%phase = 3
-       else if ((temp_ave.le.600) .and. (time .ge. time_max*0.5) .and. (time .lt. time_max*0.6)) then
-        mark(kk)%phase = 3
-       else if ((temp_ave.le.600) .and. (time .ge. time_max*0.6) .and. (time .lt. time_max*0.7)) then
-        mark(kk)%phase = 3
-       else if ((temp_ave.le.600) .and. (time .ge. time_max*0.7) .and. (time .lt. time_max*0.8)) then
-        mark(kk)%phase = 3
-       else if ((temp_ave.le.600) .and. (time .ge. time_max*0.8) .and. (time .lt. time_max*0.9)) then
-        mark(kk)%phase = 3
-       else if ((temp_ave.le.600) .and. (time .ge. time_max*0.9) .and. (time .lt. time_max)) then
-        mark(kk)%phase = 3
-       end if
-     end if
-
-     if( (i .eq. nx/2) .and. (j .le. nelem_inject+1) ) then
-       if ((temp_ave.gt.600) .and. (time .lt. time_max*0.1)) then
-        mark(kk)%phase = 5
-       else if ((temp_ave.gt.600) .and. (time .ge. time_max*0.1) .and. (time .lt. time_max*0.2)) then
-        mark(kk)%phase = 5
-       else if ((temp_ave.gt.600) .and. (time .ge. time_max*0.2) .and. (time .lt. time_max*0.3)) then
-        mark(kk)%phase = 5
-
-       else if ((temp_ave.gt.600) .and. (time .ge. time_max*0.3) .and. (time .lt. time_max*0.4)) then
-        mark(kk)%phase = 5
-       else if ((temp_ave.gt.600) .and. (time .ge. time_max*0.4) .and. (time .lt. time_max*0.5)) then
-        mark(kk)%phase = 5
-       else if ((temp_ave.gt.600) .and. (time .ge. time_max*0.5) .and. (time .lt. time_max*0.6)) then
-        mark(kk)%phase = 6
-
-       else if ((temp_ave.gt.600) .and. (time .ge. time_max*0.6) .and. (time .lt. time_max*0.7)) then
-        mark(kk)%phase = 6
-       else if ((temp_ave.gt.600) .and. (time .ge. time_max*0.7) .and. (time .lt. time_max*0.8)) then
-        mark(kk)%phase = 6
-       else if ((temp_ave.gt.600) .and. (time .ge. time_max*0.8) .and. (time .lt. time_max*0.9)) then
-        mark(kk)%phase = 6
-       else if ((temp_ave.gt.600) .and. (time .ge. time_max*0.9) .and. (time .lt. time_max)) then
-        mark(kk)%phase = 6
-       end if
-     end if
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!mul_phase end!!!!!!!!!!!!!!!!!!!!!
-end do
+!if( i .eq. nx/2) then
+! if( j  .le. 6 ) then
+!  mark(kk)%phase = 3
+!else if( j .ge. 7 .and. j .lt. 15 ) then
+! mark(kk)%phase = 5
+!else
+! mark(kk)%phase = 4
+!end if
+!end if
+enddo
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!end do
+!end do
+!!!!!!!!!!!!!!!New version end!!!!!!!!!!!!!!!!!!!!
 !$OMP end do
 !$OMP end parallel
 

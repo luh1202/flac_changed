@@ -64,6 +64,7 @@ case (1)
     enddo
     do i = 1, nx
         temp(nz,i) = temp(nz-1,i)
+
     enddo
 
     open( 1, file='temp0.dat' )
@@ -92,29 +93,20 @@ case (2)
 !!$            .or. iph_col2(n)==kocean1 .or. iph_col2(n)==kocean2  &
 !!$            .or. iph_col3(n)==kocean1 .or. iph_col3(n)==kocean2) then
             !! Oceanic geotherm (half space cooling model)
-            !print *, n, nzone_age, ixtb1(n), ixtb2(n)
             do i = ixtb1(n), ixtb2(n)
-!                print *, n, nzone_age, i, ixtb1(n), ixtb2(n)
                 age = age_1(n)
                 if (iph_col_trans(n) == 1) then
                     i1 = ixtb1(n)
                     i2 = ixtb2(n)
                     age = age_1(n) + (age_1(n+1) - age_1(n)) * (cord(1,i,1) - cord(1,i1,1)) / (cord(1,i2,1) - cord(1,i1,1))
-                    !print *, age_1(n), age_1(n+1), cord(1,i,1), cord(1,i1,1), cord(1,i2,1), age
-                    !print *, cord
                 endif
                 do j = 1,nz
                     ! depth in km
-                    y = (0 - cord(j,i,2)) / sqrt(4 * diffusivity * age * 1.e6 * sec_year)
-                    !print *, cord(1,i,2), cord(j,i,2), y
-                    !print *, 'f_ilt =', f_ilt
-                    if(cord(j,i,2) >= -5e3) then
-                      temp(j,i) = t_top + (t_bot - t_top) * erf(y)
-                    else
-                      temp(j,i) = 1300.0
-                    endif
-!                    print *, i,j,cord(j,i,2), temp(j,i)
+                    y = (cord(1,i,2)-cord(j,i,2)) / sqrt(4 * diffusivity * age * 1.e6 * sec_year)
+                    temp(j,i) = t_top + (t_bot - t_top) * erf(y)
                     temp00(j,i) = temp(j,i)
+                    !print *, temp00(j,i)
+                    !print *, j, age, -cord(j,i,2), temp(j,i)
                 enddo
 
             enddo
