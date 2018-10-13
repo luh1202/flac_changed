@@ -19,6 +19,7 @@
 
 ## GNU version >= 4.2, otherwise openmp won't work
 F90 = gfortran
+#F90 = gfortran-mp-6
 
 ## Intel, tested with v11.1
 #F90 = ifort

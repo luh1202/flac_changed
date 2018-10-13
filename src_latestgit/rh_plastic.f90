@@ -15,7 +15,7 @@
 
 !!!!!!!!
 subroutine plastic(bulkm,rmu,coh,phi,psi,depl,ipls,diss,hardn,s11,s22,s33,s12,s1a,s2a,s3a,de11,de22,de33,de12,&
-     ten_off,ndim,irh_mark,x,y,coha,amca,anphia,phia,sphia,degrada,depla,fsa,e1a,e2a,ha)
+     ten_off,ndim,irh_mark,x,y,coha,amca,anphia,phia,sphia,degrada,depla,fsa,e1a,e2a,ha,fta)
 !subroutine plastic(bulkm,rmu,coh,phi,psi,depls,ipls,diss,hardn,s11,s22,s33,s12,de11,de22,de33,de12,&
 !     ten_off,ndim,irh_mark)
 implicit none
@@ -24,7 +24,7 @@ integer, intent(in) :: ndim, irh_mark,x,y
 real*8, intent(in) :: bulkm, rmu, coh, phi, psi, hardn, de11, de22, de33, de12, ten_off
 !real*8, intent(inout) :: s11, s22, s33, s12,s1,s2,s3
 real*8, intent(inout) :: s11, s22, s33, s12!,s1a,s2a,s3a
-real*8, intent(out) :: depl, diss,s1a,s2a,s3a,coha,anphia,amca,phia,sphia,degrada,depla,fsa,e1a,e2a,ha
+real*8, intent(out) :: depl, diss,s1a,s2a,s3a,coha,anphia,amca,phia,sphia,degrada,depla,fsa,e1a,e2a,ha,fta
 integer, intent(out) :: ipls
 real*8, parameter :: pi = 3.14159265358979323846
 real*8, parameter :: degrad = pi/180.
@@ -46,6 +46,7 @@ integer icase!,x,y
 ! Initialization section
 ! ------------------------------
 depl = 0.
+depla = 0.
 diss = 0. 
 ipls = 0 
       
@@ -135,6 +136,7 @@ if (ndim.eq.2) then
     s1 = si 
     s2 = s33i
     s3 = sii
+    
 endif 
 
 !--------------------------------------------------------
@@ -171,6 +173,7 @@ anphia = anphi
 phia = phi
 sphia = sphi
 degrada = degrad
+fta = s3 - ten_off
 !- check for shear yield (if fs<0 -> plastic flow)
 fs = s1 - s3 * anphi + amc
 fsa = fs
@@ -204,6 +207,7 @@ else
     s22 = s22i + press_add
     s33 = s33i + press_add
     s12 = s12i
+    depla = depl
     return
 endif
 
@@ -245,6 +249,7 @@ anphia = anphi
 phia = phi
 sphia = sphi
 degrada = degrad
+fta = s3 - ten_off
 !print *, 's1a =', s1, 's2a =', s2,'s3a =', s3
 !print *, 'si =', s1, s2, s3
 !- resolve back to global axes

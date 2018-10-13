@@ -10,7 +10,7 @@ include 'arrays.inc'
 
 dimension depl(4)
 dimension s11p(4),s22p(4),s12p(4),s33p(4),s11v(4),s22v(4),s12v(4),s33v(4),ps1(4),ps2(4),ps3(4),coha(4),amca(4),anphia(4)
-dimension phia(4),sphia(4),degrada(4),depla(4),fsa(4),e1a(4),e2a(4),ha(4)
+dimension phia(4),sphia(4),degrada(4),depla(4),fsa(4),e1a(4),e2a(4),ha(4),fta(4)
 !dimension s11p(4),s22p(4),s12p(4),s33p(4),s11v(4),s22v(4),s12v(4),s33v(4)
 !real*8 bear1, bear2, bear3
 logical rh_sel
@@ -189,7 +189,7 @@ do 3 i = 1,nx-1 !nx-1 = 120 element number on x direction
                     s11p(k),s22p(k),s33p(k),s12p(k),ps1(k),ps2(k),ps3(k),&
                     de11,de22,de33,de12,ten_off,ndim,irh_mark,i,j,coha(k),&
                     amca(k),anphia(k),phia(k),sphia(k),degrada(k),depla(k),&
-                    fsa(k),e1a(k),e2a(k),ha(k))
+                    fsa(k),e1a(k),e2a(k),ha(k),fta(k))
 
                 irheol_fl(j,i) = 1
                 stress0(j,i,1,k) = s11p(k)
@@ -201,6 +201,9 @@ do 3 i = 1,nx-1 !nx-1 = 120 element number on x direction
             !elseif (irh.ge.11) then
                 ! Mixed rheology (Maxwell or plastic)
                 if( rh_sel ) then
+                depl(k) = 0.
+                deple2(j,i,k) = depla(k)
+                depl_avem_before = 0.25 * (deple2(7,61,1)+deple2(7,61,2)+deple2(7,61,3)+deple2(7,61,4))
 !                    call plastic(bulkm,rmu,coh,phi,psi,depl(k),ipls,diss,hardn,&
 !                        s11p(k),s22p(k),s33p(k),s12p(k),&
 !                        de11,de22,de33,de12,ten_off,ndim,irh_mark)
@@ -215,11 +218,12 @@ do 3 i = 1,nx-1 !nx-1 = 120 element number on x direction
                         !if( mod(nloop, 5000).eq.0 ) then
                         !print *, 'bear1r =', bear1, 'bear2r =', bear2,'bear3r =', bear3
                         !endif
+                    
                     call plastic(bulkm,rmu,coh,phi,psi,depl(k),ipls,diss,hardn,&
                             s11p(k),s22p(k),s33p(k),s12p(k),ps1(k),ps2(k),ps3(k),&
                             de11,de22,de33,de12,ten_off,ndim,irh_mark,i,j,coha(k),&
                             amca(k),anphia(k),phia(k),sphia(k),degrada(k),depla(k),&
-                            fsa(k),e1a(k),e2a(k),ha(k))
+                            fsa(k),e1a(k),e2a(k),ha(k),fta(k))
                     !!!!!!!!!!!!!!!assign priciple stresses for debugging!!!!!!!!!!!!!!!!
                         pss1(j,i,k) = ps1(k)
                         pss2(j,i,k) = ps2(k)
@@ -260,7 +264,7 @@ do 3 i = 1,nx-1 !nx-1 = 120 element number on x direction
                              s11p(k),s22p(k),s33p(k),s12p(k),ps1(k),ps2(k),ps3(k),&
                              de11,de22,de33,de12,ten_off,ndim,irh_mark,i,j,coha(k),&
                              amca(k),anphia(k),phia(k),sphia(k),degrada(k),depla(k),&
-                             fsa(k),e1a(k),e2a(k),ha(k))
+                             fsa(k),e1a(k),e2a(k),ha(k),fta(k))
 !print *, 'bear1 =', bear1, 'bear3 =', bear2,'bear3 =', bear3
                         stress0(j,i,1,k) = s11p(k)
                         stress0(j,i,2,k) = s22p(k)
@@ -352,12 +356,15 @@ do 3 i = 1,nx-1 !nx-1 = 120 element number on x direction
               sr11 = 0.25 * (strainr(1,1,j,i)+strainr(1,2,j,i)+strainr(1,3,j,i)+strainr(1,4,j,i))
               sr22 = 0.25 * (strainr(2,1,j,i)+strainr(2,2,j,i)+strainr(2,3,j,i)+strainr(2,4,j,i))
               sr12 = 0.25 * (strainr(3,1,j,i)+strainr(3,2,j,i)+strainr(3,3,j,i)+strainr(3,4,j,i))
+              !srJ2 = sqrt((sr11-sr22)**2 + 4*sr12*sr12)
               srJ2 = 0.5 * sqrt((sr11-sr22)**2 + 4*sr12*sr12)
               daps = -aps(j,i)/tau_heal
               if (srJ2 .ge. 1.e-13) then
                daps = daps + srJ2
               endif
-              aps(j,i) = aps(j,i) + dt * daps
+              !aps(j,i) = aps(j,i) + dt * max(daps,0.0)
+              aps(j,i) = aps(j,i) + dt * min(daps,0.0)
+              !aps(j,i) = aps(j,i) + dt * daps
               if( aps(j,i) .lt. 0. ) aps(j,i) = 0.
             endif
             if (ny_inject.gt.0 .and. i.eq.iinj) aps (j,i) = 0.
@@ -370,10 +377,10 @@ do 3 i = 1,nx-1 !nx-1 = 120 element number on x direction
 !!!!!!!!!!!!1st element of interests!!!!!!!!!!!!!
 sec_year = 3.1558e+7
 T_in_ma = time/sec_year/1.e6
-ps1_avem1 = 0.25 * (pss1(5,28,1)+pss1(5,28,2)+pss1(5,28,3)+pss1(5,28,4))
+ps1_avem1 = 0.25 * (pss1(7,61,1)+pss1(7,61,2)+pss1(7,61,3)+pss1(7,61,4))
 !print*,'ps1ave =',ps1_avem1
-ps2_avem1 = 0.25 * (pss2(5,28,1)+pss2(5,28,2)+pss2(5,28,3)+pss2(5,28,4))
-ps3_avem1 = 0.25 * (pss3(5,28,1)+pss3(5,28,2)+pss3(5,28,3)+pss3(5,28,4))
+ps2_avem1 = 0.25 * (pss2(7,61,1)+pss2(7,61,2)+pss2(7,61,3)+pss2(7,61,4))
+ps3_avem1 = 0.25 * (pss3(7,61,1)+pss3(7,61,2)+pss3(7,61,3)+pss3(7,61,4))
 
 !ps1_avel1 = 0.25 * (pss1(5,27,1)+pss1(5,27,2)+pss1(5,27,3)+pss1(5,27,4))
 !ps2_avel1 = 0.25 * (pss2(5,27,1)+pss2(5,27,2)+pss2(5,27,3)+pss2(5,27,4))
@@ -383,41 +390,43 @@ ps3_avem1 = 0.25 * (pss3(5,28,1)+pss3(5,28,2)+pss3(5,28,3)+pss3(5,28,4))
 !ps2_aver1 = 0.25 * (pss2(5,29,1)+pss2(5,29,2)+pss2(5,29,3)+pss2(5,29,4))
 !ps3_aver1 = 0.25 * (pss3(5,29,1)+pss3(5,29,2)+pss3(5,29,3)+pss3(5,29,4))
 
-ps1_avet1 = 0.25 * (pss1(5,27,1)+pss1(5,27,2)+pss1(5,27,3)+pss1(5,27,4))
-ps2_avet1 = 0.25 * (pss2(5,27,1)+pss2(5,27,2)+pss2(5,27,3)+pss2(5,27,4))
-ps3_avet1 = 0.25 * (pss3(5,27,1)+pss3(5,27,2)+pss3(5,27,3)+pss3(5,27,4))
+!ps1_avet1 = 0.25 * (pss1(6,62,1)+pss1(6,62,2)+pss1(6,62,3)+pss1(6,62,4))
+!ps2_avet1 = 0.25 * (pss2(6,62,1)+pss2(6,62,2)+pss2(6,62,3)+pss2(6,62,4))
+!ps3_avet1 = 0.25 * (pss3(6,62,1)+pss3(6,62,2)+pss3(6,62,3)+pss3(6,62,4))
 
 !ps1_aveb1 = 0.25 * (pss1(6,28,1)+pss1(6,28,2)+pss1(6,28,3)+pss1(6,28,4))
 !ps2_aveb1 = 0.25 * (pss2(6,28,1)+pss2(6,28,2)+pss2(6,28,3)+pss2(6,28,4))
 !ps3_aveb1 = 0.25 * (pss3(6,28,1)+pss3(6,28,2)+pss3(6,28,3)+pss3(6,28,4))
 
-coh_avem1 = 0.25 * (cohe(5,28,1)+cohe(5,28,2)+cohe(5,28,3)+cohe(5,28,4))
+coh_avem1 = 0.25 * (cohe(7,61,1)+cohe(7,61,2)+cohe(7,61,3)+cohe(7,61,4))
 !coh_avel1 = 0.25 * (cohe(5,27,1)+cohe(5,27,2)+cohe(5,27,3)+cohe(5,27,4))
 !coh_aver1 = 0.25 * (cohe(5,29,1)+cohe(5,29,2)+cohe(5,29,3)+cohe(5,29,4))
-coh_avet1 = 0.25 * (cohe(5,27,1)+cohe(5,27,2)+cohe(5,27,3)+cohe(5,27,4))
+!coh_avet1 = 0.25 * (cohe(6,62,1)+cohe(6,62,2)+cohe(6,62,3)+cohe(6,62,4))
 !coh_aveb1 = 0.25 * (cohe(6,28,1)+cohe(6,28,2)+cohe(6,28,3)+cohe(6,28,4))
 
-depl_avem1 = 0.25 * (deple(5,28,1)+deple(5,28,2)+deple(5,28,3)+deple(5,28,4))
-depl_avet1 = 0.25 * (deple(5,27,1)+deple(5,27,2)+deple(5,27,3)+deple(5,27,4))
-acum_plsm1 =  aps(5,28)
-acum_plst1 =  aps(5,27)
-fse_avem1 = 0.25 * (fse(5,28,1)+fse(5,28,2)+fse(5,28,3)+fse(5,28,4))
-fse_avet1 = 0.25 * (fse(5,27,1)+fse(5,27,2)+fse(5,27,3)+fse(5,27,4))
-e1e_avem1 = 0.25 * (e1e(5,28,1)+e1e(5,28,2)+e1e(5,28,3)+e1e(5,28,4))
-e1e_avet1 = 0.25 * (e1e(5,27,1)+e1e(5,27,2)+e1e(5,27,3)+e1e(5,27,4))
-e2e_avem1 = 0.25 * (e2e(5,28,1)+e2e(5,28,2)+e2e(5,28,3)+e2e(5,28,4))
-e2e_avet1 = 0.25 * (e2e(5,27,1)+e2e(5,27,2)+e2e(5,27,3)+e2e(5,27,4))
-he_avem1 = 0.25 * (he(5,28,1)+he(5,28,2)+he(5,28,3)+he(5,28,4))
-he_avet1 = 0.25 * (he(5,27,1)+he(5,27,2)+he(5,27,3)+he(5,27,4))
-amc_avem1 = 0.25 * (amce(5,28,1)+amce(5,28,2)+amce(5,28,3)+amce(5,28,4))
-amc_avel1 = 0.25 * (amce(5,27,1)+amce(5,27,2)+amce(5,27,3)+amce(5,27,4))
+depl_avem1 = 0.25 * (deple(7,61,1)+deple(7,61,2)+deple(7,61,3)+deple(7,61,4))
+!depl_avet1 = 0.25 * (deple(6,62,1)+deple(6,62,2)+deple(6,62,3)+deple(6,62,4))
+acum_plsm1 =  aps(7,61)
+!acum_plst1 =  aps(5,27)
+fse_avem1 = 0.25 * (fse(7,61,1)+fse(7,61,2)+fse(7,61,3)+fse(7,61,4))
+!fse_avet1 = 0.25 * (fse(6,62,1)+fse(6,62,2)+fse(6,62,3)+fse(6,62,4))
+fte_avem1 = 0.25 * (fte(7,61,1)+fte(7,61,2)+fte(7,61,3)+fte(7,61,4))
+!fte_avet1 = 0.25 * (fte(6,62,1)+fte(6,62,2)+fte(6,62,3)+fte(6,62,4))
+e1e_avem1 = 0.25 * (e1e(7,61,1)+e1e(7,61,2)+e1e(7,61,3)+e1e(7,61,4))
+!e1e_avet1 = 0.25 * (e1e(6,62,1)+e1e(6,62,2)+e1e(6,62,3)+e1e(6,62,4))
+e2e_avem1 = 0.25 * (e2e(7,61,1)+e2e(7,61,2)+e2e(7,61,3)+e2e(7,61,4))
+!e2e_avet1 = 0.25 * (e2e(6,62,1)+e2e(6,62,2)+e2e(6,62,3)+e2e(6,62,4))
+he_avem1 = 0.25 * (he(7,61,1)+he(7,61,2)+he(7,61,3)+he(7,61,4))
+!he_avet1 = 0.25 * (he(6,62,1)+he(6,62,2)+he(6,62,3)+he(6,62,4))
+amc_avem1 = 0.25 * (amce(7,61,1)+amce(7,61,2)+amce(7,61,3)+amce(7,61,4))
+!amc_avet1 = 0.25 * (amce(6,62,1)+amce(6,62,2)+amce(6,62,3)+amce(6,62,4))
 !amc_aver1 = 0.25 * (amce(5,29,1)+amce(5,29,2)+amce(5,29,3)+amce(5,29,4))
 !amc_avet1 = 0.25 * (amce(4,28,1)+amce(4,28,2)+amce(4,28,3)+amce(4,28,4))
 !amc_aveb1 = 0.25 * (amce(6,28,1)+amce(6,28,2)+amce(6,28,3)+amce(6,28,4))
 !
 !
-anphi_avem1 = 0.25 * (anphie(5,28,1)+anphie(5,28,2)+anphie(5,28,3)+anphie(5,28,4))
-anphi_avel1 = 0.25 * (anphie(5,27,1)+anphie(5,27,2)+anphie(5,27,3)+anphie(5,27,4))
+anphi_avem1 = 0.25 * (anphie(7,61,1)+anphie(7,61,2)+anphie(7,61,3)+anphie(7,61,4))
+!anphi_avet1 = 0.25 * (anphie(6,62,1)+anphie(6,62,2)+anphie(6,62,3)+anphie(6,62,4))
 !anphi_aver1 = 0.25 * (anphie(5,29,1)+anphie(5,29,2)+anphie(5,29,3)+anphie(5,29,4))
 !anphi_avet1 = 0.25 * (anphie(4,28,1)+anphie(4,28,2)+anphie(4,28,3)+anphie(4,28,4))
 !anphi_aveb1 = 0.25 * (anphie(6,28,1)+anphie(6,28,2)+anphie(6,28,3)+anphie(6,28,4))
@@ -454,195 +463,193 @@ anphi_avel1 = 0.25 * (anphie(5,27,1)+anphie(5,27,2)+anphie(5,27,3)+anphie(5,27,4
 !ps2_aveb2 = 0.25 * (pss2(10,62,1)+pss2(10,62,2)+pss2(10,62,3)+pss2(10,62,4))
 !ps3_aveb2 = 0.25 * (pss3(10,62,1)+pss3(10,62,2)+pss3(10,62,3)+pss3(10,62,4))
 !!
-!if( (T_in_ma.ge.0.31) .and. (i .eq. 28) .and. (j .eq. 5) ) then
-!open (unit = 1, file = "ps1m1.txt",position='append')
-!open (unit = 2, file = "ps2m1.txt",position='append')
-!open (unit = 3, file = "ps3m1.txt",position='append')
-!write (1,*) ps1_avem1
-!write (2,*) ps2_avem1
-!write (3,*) ps3_avem1
-!
-!open (unit = 32, file = "cohm1.txt",position='append')
-!write (32,*) coh_avem1
-!
-!open (unit = 56, file = "deplsm1.txt",position='append')
-!write (56,*) depl_avem1
-!
-!open (unit = 58, file = "acuplsm1.txt",position='append')
-!write (58,*) acum_plsm1
-!
-!open (unit = 60, file = "fsm1.txt",position='append')
-!write (60,*) fse_avem1
-!
-!open (unit = 62, file = "e1m1.txt",position='append')
-!write (62,*) e1e_avem1
-!
-!
-!open (unit = 64, file = "e2m1.txt",position='append')
-!write (64,*) e2e_avem1
-!
-!open (unit = 66, file = "hm1.txt",position='append')
-!write (66,*) he_avem1
-!
-!open (unit = 37, file = "amcm1.txt",position='append')
-!write (37,*) amc_avem1
-!
-!open (unit = 42, file = "anphim1.txt",position='append')
-!write (42,*) anphi_avem1
-!
-!open (unit = 16, file = "timeinmy.txt",position='append')
-!write (16,*) (time/sec_year/1.e6)
-!end if
-!
-!if( (T_in_ma.ge.0.31) .and. (i .eq. 27) .and. (j .eq. 5) ) then
-!!open (unit = 4, file = "ps1l1.txt",position='append')
-!!open (unit = 5, file = "ps2l1.txt",position='append')
-!!open (unit = 6, file = "ps3l1.txt",position='append')
-!!write (4,*) ps1_avel1
-!!write (5,*) ps2_avel1
-!!write (6,*) ps3_avel1
-!!
-!!open (unit = 7, file = "ps1r1.txt",position='append')
-!!open (unit = 8, file = "ps2r1.txt",position='append')
-!!open (unit = 9, file = "ps3r1.txt",position='append')
-!!write (7,*) ps1_aver1
-!!write (8,*) ps2_aver1
-!!write (9,*) ps3_aver1
-!
-!open (unit = 10, file = "ps1t1.txt",position='append')
-!open (unit = 11, file = "ps2t1.txt",position='append')
-!open (unit = 12, file = "ps3t1.txt",position='append')
-!write (10,*) ps1_avet1
-!write (11,*) ps2_avet1
-!write (12,*) ps3_avet1
-!
-!!open (unit = 13, file = "ps1b1.txt",position='append')
-!!open (unit = 14, file = "ps2b1.txt",position='append')
-!!open (unit = 15, file = "ps3b1.txt",position='append')
-!!write (13,*) ps1_aveb1
-!!write (14,*) ps2_aveb1
-!!write (15,*) ps3_aveb1
+!!!!first write to file if statment
+if( (T_in_ma.ge.0.18) .and. (i .eq. 61) .and. (j .eq. 7) ) then
+    open (unit = 9001, file = "ps1m1.txt",position='append')
+    open (unit = 9002, file = "ps2m1.txt",position='append')
+    open (unit = 9003, file = "ps3m1.txt",position='append')
+    write (9001,*) ps1_avem1
+    write (9002,*) ps2_avem1
+    write (9003,*) ps3_avem1
+    open (unit = 9032, file = "cohm1.txt",position='append')
+    write (9032,*) coh_avem1
+    open (unit = 9056, file = "deplsm1.txt",position='append')
+    write (9056,*) depl_avem1
+    open (unit = 9058, file = "acuplsm1.txt",position='append')
+    write (9058,*) acum_plsm1
+    open (unit = 9060, file = "fsm1.txt",position='append')
+    write (9060,*) fse_avem1
+    open (unit = 9160, file = "ftm1.txt",position='append')
+    write (9160,*) fte_avem1
+    open (unit = 9062, file = "e1m1.txt",position='append')
+    write (9062,*) e1e_avem1
+    open (unit = 9064, file = "e2m1.txt",position='append')
+    write (9064,*) e2e_avem1
+
+    open (unit = 9066, file = "hm1.txt",position='append')
+    write (9066,*) he_avem1
+
+    open (unit = 9037, file = "amcm1.txt",position='append')
+    write (9037,*) amc_avem1
+
+    open (unit = 9042, file = "anphim1.txt",position='append')
+    write (9042,*) anphi_avem1
+
+    open (unit = 9100, file = "deplsm1_before.txt",position='append')
+    write (9100,*) depl_avem_before
+
+    open (unit = 9016, file = "timeinmy.txt",position='append')
+    write (9016,*) (time/sec_year/1.e6)
+end if
+!!second write to file if statement
+!if( (T_in_ma.ge.0.316) .and. (i .eq. 27) .and. (j .eq. 5) ) then
 !
 !
-!!open (unit = 33, file = "cohl1.txt",position='append')
-!!write (33,*) coh_avel1
-!!open (unit = 34, file = "cohr1.txt",position='append')
-!!write (34,*) coh_aver1
-!open (unit = 35, file = "coht1.txt",position='append')
-!write (35,*) coh_avet1
-!!open (unit = 36, file = "cohb1.txt",position='append')
-!!write (36,*) coh_aveb1
+!    open (unit = 9010, file = "ps1t1.txt",position='append')
+!    open (unit = 9011, file = "ps2t1.txt",position='append')
+!    open (unit = 9012, file = "ps3t1.txt",position='append')
+!    write (9010,*) ps1_avet1
+!    write (9011,*) ps2_avet1
+!    write (9012,*) ps3_avet1
+!
+!    open (unit = 9035, file = "coht1.txt",position='append')
+!    write (9035,*) coh_avet1
+!
+!    open (unit = 9040, file = "amct1.txt",position='append')
+!    write (9040,*) amc_avet1
+!
+!    open (unit = 9045, file = "anphit1.txt",position='append')
+!    write (9045,*) anphi_avet1
 !
 !
-!!open (unit = 38, file = "amcl1.txt",position='append')
-!!write (38,*) amc_avel1
-!!open (unit = 39, file = "amcr1.txt",position='append')
-!!write (39,*) amc_aver1
-!open (unit = 40, file = "amct1.txt",position='append')
-!write (40,*) amc_avet1
-!!open (unit = 41, file = "amcb1.txt",position='append')
-!!write (41,*) amc_aveb1
-!!
-!
-!!open (unit = 43, file = "anphil1.txt",position='append')
-!!write (43,*) anphi_avel1
-!!open (unit = 44, file = "anphir1.txt",position='append')
-!!write (44,*) anphi_aver1
-!open (unit = 45, file = "anphit1.txt",position='append')
-!write (45,*) anphi_avet1
-!!open (unit = 46, file = "anphib1.txt",position='append')
-!!write (46,*) anphi_aveb1
-!!
-!!open (unit = 47, file = "phim1.txt",position='append')
-!!write (47,*) phi_avem1
-!!open (unit = 48, file = "phil1.txt",position='append')
-!!write (48,*) phi_avel1
-!!open (unit = 49, file = "phir1.txt",position='append')
-!!write (49,*) phi_aver1
-!!open (unit = 50, file = "phit1.txt",position='append')
-!!write (50,*) phi_avet1
-!!open (unit = 51, file = "phib1.txt",position='append')
-!!write (51,*) phi_aveb1
-!!
-!!
-!!open (unit = 52, file = "sphim1.txt",position='append')
-!!write (52,*) sphi_avem1
-!!
-!!open (unit = 53, file = "sphit1.txt",position='append')
-!!write (53,*) sphi_avet1
-!!
-!!open (unit = 54, file = "degradm1.txt",position='append')
-!!write (54,*) degrad_avem1
-!!
-!!open (unit = 55, file = "degradt1.txt",position='append')
-!!write (55,*) degrad_avet1
-!
-!open (unit = 57, file = "deplst1.txt",position='append')
-!write (57,*) depl_avet1
+!    open (unit = 9057, file = "deplst1.txt",position='append')
+!    write (9057,*) depl_avet1
 !
 !
-!open (unit = 59, file = "acuplst1.txt",position='append')
-!write (59,*) acum_plst1
+!    open (unit = 9059, file = "acuplst1.txt",position='append')
+!    write (9059,*) acum_plst1
 !
+!    open (unit = 9061, file = "fst1.txt",position='append')
+!    write (9061,*) fse_avet1
 !
+!    open (unit = 9161, file = "ftt1.txt",position='append')
+!    write (9161,*) fte_avet1
 !
+!    open (unit = 9063, file = "e1t1.txt",position='append')
+!    write (9063,*) e1e_avet1
 !
+!    open (unit = 9065, file = "e2t1.txt",position='append')
+!    write (9065,*) e2e_avet1
 !
-!open (unit = 61, file = "fst1.txt",position='append')
-!write (61,*) fse_avet1
-!
-!
-!open (unit = 63, file = "e1t1.txt",position='append')
-!write (63,*) e1e_avet1
-!
-!
-!open (unit = 65, file = "e2t1.txt",position='append')
-!write (65,*) e2e_avet1
-!
-!
-!open (unit = 67, file = "ht1.txt",position='append')
-!write (67,*) he_avet1
+!    open (unit = 9067, file = "ht1.txt",position='append')
+!    write (9067,*) he_avet1
 !
 !end if
+!open (unit = 4, file = "ps1l1.txt",position='append')
+!open (unit = 5, file = "ps2l1.txt",position='append')
+!open (unit = 6, file = "ps3l1.txt",position='append')
+!write (4,*) ps1_avel1
+!write (5,*) ps2_avel1
+!write (6,*) ps3_avel1
 !
-!!!
-!!!
-!!!
-!!open (unit = 17, file = "ps1m2.txt",position='append')
-!!open (unit = 18, file = "ps2m2.txt",position='append')
-!!open (unit = 19, file = "ps3m2.txt",position='append')
-!!write (17,*) ps1_avem2
-!!write (18,*) ps2_avem2
-!!write (19,*) ps3_avem2
+!open (unit = 7, file = "ps1r1.txt",position='append')
+!open (unit = 8, file = "ps2r1.txt",position='append')
+!open (unit = 9, file = "ps3r1.txt",position='append')
+!write (7,*) ps1_aver1
+!write (8,*) ps2_aver1
+!write (9,*) ps3_aver1
+!open (unit = 13, file = "ps1b1.txt",position='append')
+!open (unit = 14, file = "ps2b1.txt",position='append')
+!open (unit = 15, file = "ps3b1.txt",position='append')
+!write (13,*) ps1_aveb1
+!write (14,*) ps2_aveb1
+!write (15,*) ps3_aveb1
+
+
+!open (unit = 33, file = "cohl1.txt",position='append')
+!write (33,*) coh_avel1
+!open (unit = 34, file = "cohr1.txt",position='append')
+!write (34,*) coh_aver1
+!open (unit = 36, file = "cohb1.txt",position='append')
+!write (36,*) coh_aveb1
+
+
+!open (unit = 38, file = "amcl1.txt",position='append')
+!write (38,*) amc_avel1
+!open (unit = 39, file = "amcr1.txt",position='append')
+!write (39,*) amc_aver1
+!open (unit = 41, file = "amcb1.txt",position='append')
+!write (41,*) amc_aveb1
+!
+
+!open (unit = 43, file = "anphil1.txt",position='append')
+!write (43,*) anphi_avel1
+!open (unit = 44, file = "anphir1.txt",position='append')
+!write (44,*) anphi_aver1
+!open (unit = 46, file = "anphib1.txt",position='append')
+!write (46,*) anphi_aveb1
+!
+!open (unit = 47, file = "phim1.txt",position='append')
+!write (47,*) phi_avem1
+!open (unit = 48, file = "phil1.txt",position='append')
+!write (48,*) phi_avel1
+!open (unit = 49, file = "phir1.txt",position='append')
+!write (49,*) phi_aver1
+!open (unit = 50, file = "phit1.txt",position='append')
+!write (50,*) phi_avet1
+!open (unit = 51, file = "phib1.txt",position='append')
+!write (51,*) phi_aveb1
+!
+!
+!open (unit = 52, file = "sphim1.txt",position='append')
+!write (52,*) sphi_avem1
+!
+!open (unit = 53, file = "sphit1.txt",position='append')
+!write (53,*) sphi_avet1
+!
+!open (unit = 54, file = "degradm1.txt",position='append')
+!write (54,*) degrad_avem1
+!
+!open (unit = 55, file = "degradt1.txt",position='append')
+!write (55,*) degrad_avet1
 !!
-!!open (unit = 20, file = "ps1l2.txt",position='append')
-!!open (unit = 21, file = "ps2l2.txt",position='append')
-!!open (unit = 22, file = "ps3l2.txt",position='append')
-!!write (20,*) ps1_avel2
-!!write (21,*) ps2_avel2
-!!write (22,*) ps3_avel2
 !!
-!!open (unit = 23, file = "ps1r2.txt",position='append')
-!!open (unit = 24, file = "ps2r2.txt",position='append')
-!!open (unit = 25, file = "ps3r2.txt",position='append')
-!!write (23,*) ps1_aver2
-!!write (24,*) ps2_aver2
-!!write (25,*) ps3_aver2
 !!
-!!open (unit = 26, file = "ps1t2.txt",position='append')
-!!open (unit = 27, file = "ps2t2.txt",position='append')
-!!open (unit = 28, file = "ps3t2.txt",position='append')
-!!write (26,*) ps1_avet2
-!!write (27,*) ps2_avet2
-!!write (28,*) ps3_avet2
+!open (unit = 17, file = "ps1m2.txt",position='append')
+!open (unit = 18, file = "ps2m2.txt",position='append')
+!open (unit = 19, file = "ps3m2.txt",position='append')
+!write (17,*) ps1_avem2
+!write (18,*) ps2_avem2
+!write (19,*) ps3_avem2
+!
+!open (unit = 20, file = "ps1l2.txt",position='append')
+!open (unit = 21, file = "ps2l2.txt",position='append')
+!open (unit = 22, file = "ps3l2.txt",position='append')
+!write (20,*) ps1_avel2
+!write (21,*) ps2_avel2
+!write (22,*) ps3_avel2
+!
+!open (unit = 23, file = "ps1r2.txt",position='append')
+!open (unit = 24, file = "ps2r2.txt",position='append')
+!open (unit = 25, file = "ps3r2.txt",position='append')
+!write (23,*) ps1_aver2
+!write (24,*) ps2_aver2
+!write (25,*) ps3_aver2
+!
+!open (unit = 26, file = "ps1t2.txt",position='append')
+!open (unit = 27, file = "ps2t2.txt",position='append')
+!open (unit = 28, file = "ps3t2.txt",position='append')
+!write (26,*) ps1_avet2
+!write (27,*) ps2_avet2
+!write (28,*) ps3_avet2
+!
+!open (unit = 29, file = "ps1b2.txt",position='append')
+!open (unit = 30, file = "ps2b2.txt",position='append')
+!open (unit = 31, file = "ps3b2.txt",position='append')
+!write (29,*) ps1_aveb2
+!write (30,*) ps2_aveb2
+!write (31,*) ps3_aveb2
 !!
-!!open (unit = 29, file = "ps1b2.txt",position='append')
-!!open (unit = 30, file = "ps2b2.txt",position='append')
-!!open (unit = 31, file = "ps3b2.txt",position='append')
-!!write (29,*) ps1_aveb2
-!!write (30,*) ps2_aveb2
-!!write (31,*) ps3_aveb2
-!!!
 
 !!!!!!!!!!!debug ends!!!!!!!!!!!!!!
 

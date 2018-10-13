@@ -25,6 +25,7 @@ call fl_srate
 if( mod(nloop, 10).eq.0 ) call change_phase_dike
 !if( mod(nloop, 100).eq.0 ) call write_stress
 ! Update stresses by constitutive law (and mix isotropic stresses)
+depl = 0.
 call fl_rheol
 !print*,'hey there'
 !call user_lu
