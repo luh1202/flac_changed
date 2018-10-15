@@ -17,13 +17,13 @@ do i= 1,iinj-1
    do j= 1,nz
       cord(j,i,1) = cordo(j,i+1,1)
       cord(j,i,2) = cordo(j,i+1,2)
-enddo
+   enddo
 enddo
 do i = nx,iinj+2,-1
    do j =1,nz
       cord(j,i,1) = cordo(j,i-1,1)
       cord(j,i,2) = cordo(j,i-1,2)
-enddo
+   enddo
 enddo
 do j= 1,nz
    cord(j,iinj,1) = cord(j,iinj-1,1) + dx_init 

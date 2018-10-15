@@ -80,10 +80,10 @@ do while( time .le. time_max )
   nloop = nloop + 1
   if( dtout_screen .ne. 0 ) then
     if( dtacc_screen .gt. dtout_screen ) then
-       !write(*,'(I10,A,F7.3,A,F8.1,A)') nloop,'''s step. Time[My]=', time/sec_year/1.e+6, &
-       !         ',  elapsed sec-', secnds(time0)
-       !write(333,'(I10,A,F7.3,A,F8.1,A)') nloop,'''s step. Time[My]=', time/sec_year/1.e+6, &
-       !         ',  elapsed sec-', secnds(time0)
+       write(*,'(I10,A,F7.3,A,F8.1,A)') nloop,'''s step. Time[My]=', time/sec_year/1.e+6, &
+                ',  elapsed sec-', secnds(time0)
+       write(333,'(I10,A,F7.3,A,F8.1,A)') nloop,'''s step. Time[My]=', time/sec_year/1.e+6, &
+                ',  elapsed sec-', secnds(time0)
        dtacc_screen = 0
     endif
   endif

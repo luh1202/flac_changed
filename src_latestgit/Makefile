@@ -41,7 +41,7 @@ LDFLAGS =
 ########################################################################
 ## default command line options
 ########################################################################
-debug = 0
+debug = 1
 omp = 1
 coverage = 0
 gprof = 0
@@ -64,7 +64,7 @@ ifeq ($(F90), gfortran)
 		CFLAGS += -O0 -Wall -fbounds-check -ftrapv -fbacktrace -fdump-core \
 			-Waliasing -Walign-commons -Wampersand -Wintrinsic-shadow \
 			-Wline-truncation -Wsurprising -Wunderflow \
-			-finit-integer=-99 -finit-real=nan -frange-check -Werror
+			-finit-integer=-99 -finit-real=nan -frange-check #-Werror
 	endif
 
 	ifeq ($(coverage), 1)
@@ -210,9 +210,9 @@ $(OBJS): %.o : %.f90 params.inc arrays.inc
 take-snapshot:
 	@# snapshot of the code for building the executable
 	@echo Flags used to compile the code: > snapshot.diff
-	@echo '  '  CXX=$(CXX) opt=$(opt) openmp=$(openmp) >> snapshot.diff
-	@echo '  '  PATH=$(PATH) >> snapshot.diff
-	@echo '  '  LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) >> snapshot.diff
+	@echo '  '  CXX=$(CXX) debug=$(debug) omp=$(omp) >> snapshot.diff
+	@echo '  '  PATH=`echo ${PATH}` >> snapshot.diff
+	@echo '  '  LD_LIBRARY_PATH=`echo ${LD_LIBRARY_PATH}` >> snapshot.diff
 ifneq (HAS_HG),)
 	@echo >> snapshot.diff
 	@echo >> snapshot.diff
@@ -229,8 +229,6 @@ ifneq (HAS_HG),)
 else
 	@echo \'hg\' is not in path, cannot take code snapshot. >> snapshot.diff
 endif
-
-
 
 clean:
 	@rm -f $(MODULES) $(MODULE_OBJS) $(OBJS) $(EXE)
