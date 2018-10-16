@@ -240,10 +240,10 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 2         0-no scale for DYNAMICS,1-scale for STATICS, 2-Automatic scaling
 1.,1.e-4  dt_scale (used if scale =1), tolerance=Vbc/Vsound (if scale=2)
 1,5      Buoyancy + Reynolds (no-0,yes-1), Reynolds number
-10       frequency of re-evaluation of real masses
-10       frequency of re-evaluation of inertial masses
-10       Freq. re-evaluation Non-Newtonian VISC (rheol.eq.12)
-10       Freq. averaging strain rate and dissipation
+5       frequency of re-evaluation of real masses
+5       frequency of re-evaluation of inertial masses
+5       Freq. re-evaluation Non-Newtonian VISC (rheol.eq.12)
+5       Freq. averaging strain rate and dissipation
 ;
 ; Acceleration Parameters (Cundall, 1982)
 1.00,5.e-2,1.e-1    amul,ratl,ratu
@@ -258,13 +258,13 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 ; Time parameters below are in thousands years
 ;
 ; Max time of calculations (in Kyr)
-2000  ;  1 Myrs
+330  ;  1 Myrs
 ;
 ; Time interval for screen output of calc. progress (in Kyr)
-10
+5
 ;
 ; Time interval for file output (in Kyr)
-10
+1
 ;
 ; Variables to print
 ; vel srII eII aps sII sxx szz sxz pres temp melt visc phas mark src diss forc hfl topo
@@ -274,7 +274,7 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 0
 ;
 ; Time interval for process saving
-50 - nsave (frequency of saving)
+1 - nsave (frequency of saving)
 ;
 ; saving the last step only (1) or each nsave step (0)
 0
