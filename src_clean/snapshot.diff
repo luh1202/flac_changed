@@ -1,0 +1,7 @@
+Flags used to compile the code:
+   CXX=mpicxx opt= openmp=
+   PATH=/home/hlu1/bin:/home/hlu1/.local/bin:/home/hlu1/snac/snac-1/build/bin:/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+   LD_LIBRARY_PATH=/home/hlu1/snac/snac-1/build/lib:
+
+
+==== Summary of the code ====
