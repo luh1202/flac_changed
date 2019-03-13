@@ -1,0 +1,7 @@
+Flags used to compile the code:
+   CXX=mpicxx-mpich-mp opt= openmp=
+   PATH=/opt/local/bin:/opt/local/sbin:/Users/haolu/Software/hyp1.40/source:/Applications/TauP-2.1.2/bin:/Applications/sac/bin:/Users/haolu/Software/snac/snac-1/build/bin:/opt/passcal/other/bin:/Applications/TauP-2.1.2/bin:/Applications/sac/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/TeX/texbin:/opt/X11/bin:/opt/passcal/bin:/opt/passcal/other/bin:/opt/passcal/bin:/opt/passcal/other/bin
+   LD_LIBRARY_PATH=
+
+
+==== Summary of the code ====
